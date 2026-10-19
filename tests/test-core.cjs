@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const C=require('../dist/core.js').TransportCore;
+let master=[{id:'s',name:'渋谷',aliases:[]}];
+let csv='タイトル,開始日,終了日,終日,場所,説明\r\n"配信,本番",2026-10-10,2026-10-12,TRUE,,"渋谷\n集合"';
+let rows=C.expand(C.parseCSV(csv),master);assert.equal(rows.length,3);assert.equal(rows[2].date,'2026-10-12');assert.equal(rows[0].matches[0].id,'s');assert.equal(rows[0].status,'pending');
+const ics=(start,end,extra='')=>'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:test\r\nSUMMARY:配信\r\nDTSTART'+start+'\r\nDTEND'+end+'\r\n'+extra+'END:VEVENT\r\nEND:VCALENDAR';
+assert.equal(C.expand(C.parseICS(ics(';VALUE=DATE:20261010',';VALUE=DATE:20261013')),master).length,3);
+assert.equal(C.expand(C.parseICS(ics(':20261010T160000Z',':20261010T170000Z')),master)[0].date,'2026-10-11');
+assert.equal(C.expand(C.parseICS(ics(';TZID=Asia/Tokyo:20261010T230000',';TZID=Asia/Tokyo:20261011T000000')),master).length,1);
+assert.throws(()=>C.parseICS(ics(':20261010T100000',':20261010T110000','RRULE:FREQ=DAILY\r\n')),/未対応/);
+assert.throws(()=>C.parseCSV('タイトル,開始日\na,2026-02-30'),/存在しない/);
+assert.throws(()=>C.parseCSV('タイトル,開始日\n"bad,2026-01-01'),/引用符/);
+assert.equal(C.expand([...C.parseCSV(csv),...C.parseCSV(csv)],master).length,3);
+assert.equal(C.match({title:'私用',location:'',description:''},master).length,0);
+console.log('9 extraction checks passed');

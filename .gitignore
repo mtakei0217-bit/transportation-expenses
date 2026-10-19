@@ -1,0 +1,5 @@
+node_modules/
+data/private/
+.env
+.env.*
+!.env.example

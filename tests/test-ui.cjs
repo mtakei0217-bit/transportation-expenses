@@ -1,0 +1,5 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const els=new Map();const el=id=>{if(!els.has(id))els.set(id,{value:id==='filter'?'all':'',textContent:'',innerHTML:'',dataset:{},classList:{toggle(){}},addEventListener(){}});return els.get(id);};
+let ctx={document:{getElementById:el,querySelectorAll:()=>[],querySelector:()=>({click(){}})},TransportCore:require('../dist/core.js').TransportCore,structuredClone,crypto:require('node:crypto').webcrypto,confirm:()=>true,console};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),ctx);
+el('sample').onclick();assert.equal(el('total').textContent,8);assert.equal(el('pending').textContent,8);assert.match(el('list').innerHTML,/精算金額：未確認/);assert.match(el('list').innerHTML,/2026-10-12/);assert.match(el('list').innerHTML,/勤務地候補が複数/);el('filter').value='confirmed';el('filter').onchange();assert.match(el('list').innerHTML,/表示する候補がありません/);console.log('6 screen-rendering checks passed (without browser)');
